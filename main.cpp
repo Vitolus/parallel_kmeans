@@ -49,7 +49,7 @@ void load_MNIST(    const char* images_file, const char* labels_file,
 int main() {
     std::vector< std::vector<float> > images;
     std::vector<int> labels;
-    load_MNIST("mnist-images.txt", "mnist-labels.txt", images, labels);
+    load_MNIST("../data/mnist-images.txt", "../data/mnist-labels.txt", images, labels);
 
 
     std::cout << "No. Images: " << images.size() << std::endl;
