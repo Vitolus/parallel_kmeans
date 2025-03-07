@@ -5,7 +5,7 @@
 class kmeans_euclidean : public k_means{
 public:
     using k_means::k_means;
-    float distance(const std::vector<float>& a, const std::vector<float>& b) override;
+    float distance(const std::vector<float>& x, int c_idx) override;
 };
 
 #endif //KMEANS_EUCLIDEAN_H
