@@ -36,11 +36,19 @@ std::vector<std::vector<float>> k_means::sampleData(const std::vector<std::vecto
     return batch;
 }
 
-int k_means::findCentroidIdx(const std::vector<float>& x){
+int k_means::findCentroidIdx(const std::vector<float>& x) const{
     int idx = 0;
     for(auto i = 1; i < k; i++){
-        if(distance(x, i) < distance(x, idx))
+        if(euclideanDistance(x, i) < euclideanDistance(x, idx))
             idx = i;
     }
     return idx;
+}
+
+void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& counts, const int idx){
+    counts[idx] += 1;
+    const float ln = 1.0 / counts[idx];
+    for(auto i = 0; i < k; i++){
+        centroids[idx][i] = (1 - ln) * centroids[idx][i] + ln * x[i];
+    }
 }
