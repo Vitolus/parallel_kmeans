@@ -15,6 +15,14 @@ k_means::k_means(const int k, const int batchSize, const int maxIter) : k(k), ba
     }
 }
 
+float k_means::euclideanDistance(const std::vector<float> &x, const int c_idx) const{
+    float sum = 0.0;
+    for(auto i = 0; i < x.size(); i++){
+        sum += std::pow(x[i] - centroids[c_idx][i], 2);
+    }
+    return std::sqrt(sum);
+}
+
 std::vector<std::vector<float>> k_means::sampleData(const std::vector<std::vector<float>> &dataset){
     std::vector<std::vector<float>> batch;
     std::vector<auto> indices(dataset.size());
