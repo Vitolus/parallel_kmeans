@@ -15,18 +15,20 @@ private:
     int batchSize; // number of samples to use in each iteration
     int maxIter; // maximum number of iterations
     std::vector<std::vector<float>> centroids; // cluster centers
-    //TODO:2 implement fit method
+    //TODO:3 implement fit method
 
     // euclidean distance between a data point and a cluster center
     [[nodiscard]] float euclideanDistance(const std::vector<float>& x, int c_idx) const;
     // sample a batch of data points
-    std::vector<std::vector<float>> sampleData();
+    [[nodiscard]] std::vector<std::vector<float>> sampleData() const;
     // find the closest centroid idx for a data point
     [[nodiscard]] int findCentroidIdx(const std::vector<float>& x) const;
     // update the centroid based on a data point
     void updateCentroid(const std::vector<float>& x, std::vector<int>& counts, int idx);
     // assign data points to the closest centroid
     void assignData();
+    //TODO:1 implement Inertia error method
+    //TODO:2 implement NMI method
 };
 
 #endif //K_MEANS_H
