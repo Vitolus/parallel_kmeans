@@ -1,9 +1,14 @@
 #include "k_means.h"
 #include <random>
 
-k_means::k_means(const int k, const int batchSize, const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter) {
+k_means::k_means(std::vector<std::vector<float>>&& data, std::vector<int>&& labels, const int k, const int batchSize,
+const int maxIter) : dataset(std::move(data)), labels(std::move(labels)), k(k), batchSize(batchSize), maxIter(maxIter) {
+    assignments.resize(labels.size());
     centroids.resize(k);
-    for( auto &c : centroids){
+    for(auto& a : assignments){
+        a = -1;
+    }
+    for( auto& c : centroids){
         c.resize(784);
         // initialize the centroids to random values
         std::random_device rd;
@@ -15,7 +20,7 @@ k_means::k_means(const int k, const int batchSize, const int maxIter) : k(k), ba
     }
 }
 
-float k_means::euclideanDistance(const std::vector<float> &x, const int c_idx) const{
+float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
     float sum = 0.0;
     for(auto i = 0; i < x.size(); i++){
         sum += std::pow(x[i] - centroids[c_idx][i], 2);
@@ -23,7 +28,7 @@ float k_means::euclideanDistance(const std::vector<float> &x, const int c_idx) c
     return std::sqrt(sum);
 }
 
-std::vector<std::vector<float>> k_means::sampleData(const std::vector<std::vector<float>> &dataset){
+std::vector<std::vector<float>> k_means::sampleData(){
     std::vector<std::vector<float>> batch;
     std::vector<auto> indices(dataset.size());
     std::iota(indices.begin(), indices.end(), 0);
@@ -50,5 +55,11 @@ void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& coun
     const float ln = 1.0 / counts[idx];
     for(auto i = 0; i < k; i++){
         centroids[idx][i] = (1 - ln) * centroids[idx][i] + ln * x[i];
+    }
+}
+
+void k_means::assignData(){
+    for(auto i = 0; i < dataset.size(); i++){
+        assignments[i] = findCentroidIdx(dataset[i]);
     }
 }
