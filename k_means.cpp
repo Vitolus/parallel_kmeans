@@ -3,11 +3,7 @@
 
 k_means::k_means(std::vector<std::vector<float>>&& data, std::vector<int>&& labels, const int k, const int batchSize,
 const int maxIter) : dataset(std::move(data)), labels(std::move(labels)), k(k), batchSize(batchSize), maxIter(maxIter) {
-    assignments.resize(labels.size());
     centroids.resize(k);
-    for(auto& a : assignments){ // initialize the assignments to -1 (unassigned)
-        a = -1;
-    }
     for( auto& c : centroids){ // initialize the centroids to random values
         c.resize(784);
         std::random_device rd;
@@ -17,6 +13,19 @@ const int maxIter) : dataset(std::move(data)), labels(std::move(labels)), k(k), 
             c[i] = dis(gen);
         }
     }
+}
+
+void k_means::fit(const float tol){
+    std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
+    float deltaError = std::numeric_limits<float>::max();
+    for(auto i = 0; deltaError > tol | i < maxIter; i++){
+        for(auto batch = sampleData(); const auto& x : batch){
+            const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
+            updateCentroid(x, counts, idx); // update the centroid based on a data point
+        }
+        deltaError = std::abs(deltaError - inertiaError()); // calculate the inertia error
+    }
+    scanAssign(); // assign data points to the closest centroid
 }
 
 float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
@@ -58,8 +67,20 @@ void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& coun
     }
 }
 
-void k_means::assignData(){
+void k_means::scanAssign(){
     for(auto i = 0; i < dataset.size(); i++){ // assign data points to the closest centroid
-        assignments[i] = findCentroidIdx(dataset[i]);
+        clusters[findCentroidIdx(dataset[i])] = i;
     }
 }
+
+float k_means::inertiaError(){
+    float inertia = 0.0;
+    for(auto i = 0; i < k; i++){
+        for(const int& p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
+            inertia += euclideanDistance(dataset[p], i);
+        }
+    }
+    return inertia;
+}
+
+
