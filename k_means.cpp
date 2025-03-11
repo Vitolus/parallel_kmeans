@@ -18,14 +18,17 @@ const int maxIter) : dataset(std::move(data)), labels(std::move(labels)), k(k), 
 void k_means::fit(const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     float deltaError = std::numeric_limits<float>::max();
-    for(auto i = 0; deltaError > tol | i < maxIter; i++){
+    float prevError = 0.0;
+    for(auto i = 0; deltaError > tol && i < maxIter; i++){
         for(auto batch = sampleData(); const auto& x : batch){
             const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
             updateCentroid(x, counts, idx); // update the centroid based on a data point
         }
-        deltaError = std::abs(deltaError - inertiaError()); // calculate the inertia error
+        scanAssign(); // assign data points to the closest centroid
+        const float currError = inertiaError(); // calculate the inertia error
+        deltaError = std::abs(prevError - currError); // calculate the change in inertia error
+        prevError = currError;
     }
-    scanAssign(); // assign data points to the closest centroid
 }
 
 float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
