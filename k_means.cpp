@@ -23,7 +23,7 @@ const int maxIter) : dataset(std::move(data)), k(k), batchSize(batchSize), maxIt
     }
 }
 
-void k_means::fit(const float tol){
+float k_means::fit(const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     float deltaError = std::numeric_limits<float>::max();
     float prevError = 0.0;
@@ -38,6 +38,8 @@ void k_means::fit(const float tol){
         deltaError = std::abs(prevError - currError); // calculate the change in inertia error
         prevError = currError;
     }
+    scanAssign(dataset);
+    return nmiError();
 }
 
 float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
@@ -97,6 +99,31 @@ float k_means::inertiaError(const std::vector<std::vector<float>>& batch){
         }
     }
     return inertia;
+}
+
+float k_means::nmiError(){
+    float nmi = 0.0;
+    float hentropyClusters = 0.0;
+    float hentropyLabels = 0.0;
+    float mutualInformation = 0.0;
+    for(const auto & cluster : clusters){
+        const float ratio = cluster.size() / dataset.size();
+        hentropyClusters += ratio * (-1)*std::log2(ratio);
+    }
+    for(const auto & labelCluster : labelClusters){
+        const float ratio = labelCluster.size() / dataset.size();
+        hentropyLabels += ratio * (-1)*std::log2(ratio);
+    }
+    for(auto & cluster : clusters){
+        for(auto & labelCluster : labelClusters){
+            std::vector<int> intersection;
+            std::set_intersection(cluster.begin(), cluster.end(),
+            labelCluster.begin(), labelCluster.end(), std::back_inserter(intersection));
+            mutualInformation += (intersection.size() / dataset.size()) * std::log2((dataset.size() *
+            intersection.size()) / (cluster.size() * labelCluster.size()));
+        }
+    }
+    return mutualInformation / ((hentropyClusters + hentropyLabels) / 2);
 }
 
 

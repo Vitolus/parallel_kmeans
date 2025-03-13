@@ -10,12 +10,12 @@ public:
     void fit(float tol);
 
 private:
-    std::vector<std::vector<float>> dataset; // data points
-    std::vector<int> labels; // true label assignments
-    std::unordered_map<int, int> clusters; // fitted cluster assignments (key: cluster idx, value: data point idx)
     int k; // number of clusters
     int batchSize; // number of samples to use in each iteration
     int maxIter; // maximum number of iterations
+    std::vector<std::vector<float>> dataset; // data points
+    std::vector<std::vector<int>> labelClusters;
+    std::vector<std::vector<int>> clusters; // fitted cluster assignments (key: cluster idx, value: data point idx)
     std::vector<std::vector<float>> centroids; // cluster centers
 
     // euclidean distance between a data point and a cluster center
@@ -30,6 +30,7 @@ private:
     void scanAssign(const std::vector<std::vector<float>>& batch);
     // sum of squared distances of samples to their closest cluster center
     float inertiaError(const std::vector<std::vector<float>>& batch);
+    // normalized mutual information
     float nmiError();
 };
 
