@@ -27,9 +27,9 @@ private:
     // update the centroid based on a data point
     void updateCentroid(const std::vector<float>& x, std::vector<int>& counts, int idx);
     // assign data points to the closest centroid
-    void scanAssign();
-    float inertiaError();
-    //TODO: add nmi error method
+    void scanAssign(const std::vector<std::vector<float>>& batch);
+    float inertiaError(const std::vector<std::vector<float>>& batch);
+    float nmiError();
 };
 
 #endif //K_MEANS_H

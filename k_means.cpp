@@ -20,12 +20,13 @@ void k_means::fit(const float tol){
     float deltaError = std::numeric_limits<float>::max();
     float prevError = 0.0;
     for(auto i = 0; deltaError > tol && i < maxIter; i++){
-        for(auto batch = sampleData(); const auto& x : batch){
+        std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
+        for(const auto& x : batch){
             const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
             updateCentroid(x, counts, idx); // update the centroid based on a data point
         }
-        scanAssign(); // assign data points to the closest centroid
-        const float currError = inertiaError(); // calculate the inertia error
+        scanAssign(batch); // assign data points to the closest centroid
+        const float currError = inertiaError(batch); // calculate the inertia error
         deltaError = std::abs(prevError - currError); // calculate the change in inertia error
         prevError = currError;
     }
@@ -70,17 +71,18 @@ void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& coun
     }
 }
 
-void k_means::scanAssign(){
-    for(auto i = 0; i < dataset.size(); i++){ // assign data points to the closest centroid
-        clusters[findCentroidIdx(dataset[i])] = i;
+void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
+    clusters.clear();
+    for(auto i = 0; i < batch.size(); i++){ // assign data points to the closest centroid
+        clusters[findCentroidIdx(batch[i])] = i;
     }
 }
 
-float k_means::inertiaError(){
+float k_means::inertiaError(const std::vector<std::vector<float>>& batch){
     float inertia = 0.0;
     for(auto i = 0; i < k; i++){
         for(const int& p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
-            inertia += euclideanDistance(dataset[p], i);
+            inertia += euclideanDistance(batch[p], i);
         }
     }
     return inertia;
