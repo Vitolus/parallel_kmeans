@@ -1,17 +1,25 @@
 #include "k_means.h"
 #include <random>
 
-k_means::k_means(std::vector<std::vector<float>>&& data, std::vector<int>&& labels, const int k, const int batchSize,
-const int maxIter) : dataset(std::move(data)), labels(std::move(labels)), k(k), batchSize(batchSize), maxIter(maxIter) {
+k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int k, const int batchSize,
+const int maxIter) : dataset(std::move(data)), k(k), batchSize(batchSize), maxIter(maxIter) {
     centroids.resize(k);
-    for( auto& c : centroids){ // initialize the centroids to random values
-        c.resize(784);
+    for( auto& centroid : centroids){ // initialize the centroids to random values
+        centroid.resize(784);
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_real_distribution<float> dis(0.0, 1.0);
         for(auto i = 0; i < 784; i++){
-            c[i] = dis(gen);
+            centroid[i] = dis(gen);
         }
+    }
+    clusters.resize(k);
+    labelClusters.resize(10);
+    for(auto i = 0; i < labels.size(); i++){ // true cluster assignments
+        labelClusters[labels[i]].push_back(i);
+    }
+    for(auto& cluster : labelClusters){
+        cluster.shrink_to_fit();
     }
 }
 
@@ -74,7 +82,10 @@ void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& coun
 void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     clusters.clear();
     for(auto i = 0; i < batch.size(); i++){ // assign data points to the closest centroid
-        clusters[findCentroidIdx(batch[i])] = i;
+        clusters[findCentroidIdx(batch[i])].push_back(i);
+    }
+    for(auto& cluster : clusters){
+        cluster.shrink_to_fit();
     }
 }
 

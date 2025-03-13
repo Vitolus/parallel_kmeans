@@ -6,7 +6,7 @@
 
 class k_means{
 public:
-    k_means(std::vector<std::vector<float>>&& data, std::vector<int>&& labels, int k, int batchSize, int maxIter); // constructor
+    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter); // constructor
     void fit(float tol);
 
 private:
@@ -28,6 +28,7 @@ private:
     void updateCentroid(const std::vector<float>& x, std::vector<int>& counts, int idx);
     // assign data points to the closest centroid
     void scanAssign(const std::vector<std::vector<float>>& batch);
+    // sum of squared distances of samples to their closest cluster center
     float inertiaError(const std::vector<std::vector<float>>& batch);
     float nmiError();
 };
