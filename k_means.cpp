@@ -2,7 +2,7 @@
 #include <random>
 
 k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int k, const int batchSize,
-const int maxIter) : dataset(std::move(data)), k(k), batchSize(batchSize), maxIter(maxIter) {
+const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::move(data)) {
     centroids.resize(k);
     for( auto& centroid : centroids){ // initialize the centroids to random values
         centroid.resize(784);
@@ -44,7 +44,7 @@ float k_means::fit(const float tol){
 
 float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
     float sum = 0.0;
-    for(auto i = 0; i < x.size(); i++){ // calculate the euclidean distance between a data point and a centroid
+    for(auto i = 0; i < x.size(); i++){ // calculate the Euclidean distance between a data point and a centroid
         sum += std::pow(x[i] - centroids[c_idx][i], 2); // sum of squared differences
     }
     return std::sqrt(sum);
@@ -66,7 +66,7 @@ for(auto i = 0; i < batchSize; i++){ // sample batchSize shuffled data points
 
 int k_means::findCentroidIdx(const std::vector<float>& x) const{
     int idx = 0;
-    for(auto i = 1; i < k; i++){ // find the closest centroid idx for a data point using euclidean distance
+    for(auto i = 1; i < k; i++){ // find the closest centroid idx for a data point using Euclidean distance
         if(euclideanDistance(x, i) < euclideanDistance(x, idx))
             idx = i;
     }
@@ -75,9 +75,9 @@ int k_means::findCentroidIdx(const std::vector<float>& x) const{
 
 void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& counts, const int idx){
     counts[idx] += 1; // add one to the count of data points assigned to the centroid
-    const float ln = 1.0 / counts[idx]; // learning rate decays with the number of data points assigned to the centroid
+    const float lr = 1.0 / counts[idx]; // learning rate decays with the number of data points assigned to the centroid
     for(auto i = 0; i < k; i++){ // update the centroid based on a data point
-        centroids[idx][i] = (1 - ln) * centroids[idx][i] + ln * x[i]; // lower ln, less weight to the new data point
+        centroids[idx][i] = (1 - lr) * centroids[idx][i] + lr * x[i]; // lower ln, less weight to the new data point
     }
 }
 

@@ -2,12 +2,11 @@
 #define K_MEANS_H
 
 #include <vector>
-#include <unordered_map>
 
 class k_means{
 public:
-    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter); // constructor
-    void fit(float tol);
+    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter);
+    float fit(float tol);
 
 private:
     int k; // number of clusters
@@ -18,7 +17,7 @@ private:
     std::vector<std::vector<int>> clusters; // fitted cluster assignments (key: cluster idx, value: data point idx)
     std::vector<std::vector<float>> centroids; // cluster centers
 
-    // euclidean distance between a data point and a cluster center
+    // Euclidean distance between a data point and a cluster center
     [[nodiscard]] float euclideanDistance(const std::vector<float>& x, int c_idx) const;
     // sample a batch of data points
     [[nodiscard]] std::vector<std::vector<float>> sampleData() const;
