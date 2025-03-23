@@ -111,11 +111,11 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     }
 }
 
-float k_means::inertiaError(const std::vector<std::vector<float>>& batch){
+float k_means::inertiaError(){
     float inertia = 0.0;
     for(auto i = 0; i < k; i++){
-        for(const int& p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
-            inertia += std::pow(euclideanDistance(batch[p], i), 2);
+        for(const int p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
+            inertia += std::pow(euclideanDistance(dataset[p], i), 2);
         }
     }
     return inertia;

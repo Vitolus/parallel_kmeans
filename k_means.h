@@ -23,7 +23,7 @@ class k_means{
     // assign data points to the closest centroid
     void scanAssign(const std::vector<std::vector<float>>& batch);
     // sum of squared distances of samples to their closest cluster center
-    float inertiaError(const std::vector<std::vector<float>>& batch);
+    float inertiaError();
     // normalized mutual information
     float nmiError();
 
