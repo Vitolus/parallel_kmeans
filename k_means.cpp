@@ -21,7 +21,7 @@ const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::
     }
 }
 
-float k_means::fit(const float tol){
+std::pair<float, float> k_means::fit(const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     float totalChange = tol + 1.0;
     std::vector<std::vector<float>> prevCentroids = centroids;
@@ -57,7 +57,7 @@ float k_means::fit(const float tol){
         std::cout << std::endl;
     } // end show
 
-    return nmiError();
+    return {inertiaError(), nmiError()};
 }
 
 float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
