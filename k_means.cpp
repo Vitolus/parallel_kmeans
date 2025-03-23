@@ -23,18 +23,20 @@ const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::
 
 float k_means::fit(const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
-    float deltaError = tol + 1;
-    float prevError = 0.0;
-    for(auto i = 0; deltaError > tol && i < maxIter; i++){
+    float totalChange = tol + 1.0;
+    std::vector<std::vector<float>> prevCentroids = centroids;
+    for(auto i = 0; totalChange > tol && i < maxIter; i++){
         std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
         for(const auto& x : batch){
             const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
             updateCentroid(x, counts, idx); // update the centroid based on a data point
         }
         scanAssign(batch); // assign data points to the closest centroid
-        const float currError = inertiaError(batch); // calculate the inertia error
-        deltaError = std::abs(prevError - currError); // calculate the change in inertia error
-        prevError = currError;
+        totalChange = 0.0;
+        for(auto j = 0; j < k; j++){
+        totalChange += euclideanDistance(prevCentroids[j], j);
+        }
+        prevCentroids = centroids;
     }
     scanAssign(dataset);
     return nmiError();
