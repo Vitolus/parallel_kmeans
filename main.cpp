@@ -55,14 +55,14 @@ int main() {
     std::cout << "Image is " << labels[0] << std::endl;
     */
 
-    // test k_means with 10 samples
+    // test k_means with n samples
     std::vector<std::vector<float>> data;
     std::vector<int> labels2;
-    for (int i=0; i<300; i++) {
+    for (int i=0; i<10000; i++) {
         data.push_back(images[i]);
         labels2.push_back(labels[i]);
     }
-    k_means km((std::move(data)), labels2, 10, 30, 15);
+    k_means km((std::move(data)), labels2, 13, 256, 100);
     auto [fst, snd] = km.fit(0.1);
     std::cout << "inertia value: " << fst << std::endl
     << "nmi value: " << snd << std::endl;

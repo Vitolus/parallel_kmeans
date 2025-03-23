@@ -51,9 +51,11 @@ std::pair<float, float> k_means::fit(const float tol){
         }
     } // end show
     // show clusters
-    for (int j=0; j<k; j++) {
-        std::cout << "Cluster " << j << " size: " << clusters[j].size() << std::endl
-        << "Label Cluster " << j << " size: " << labelClusters[j].size() << std::endl;
+    for(auto j=0; j<k; j++) {
+        std::cout << "Cluster " << j << " size: " << clusters[j].size() << std::endl;
+    }
+    for(auto j = 0; j < 10; j++){
+        std::cout << "Label Cluster " << j << " size: " << labelClusters[j].size() << std::endl;
     } // end show
     std::cout << "Number of iterations: " << i << std::endl;
 
