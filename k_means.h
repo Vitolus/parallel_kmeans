@@ -4,11 +4,6 @@
 #include <vector>
 
 class k_means{
-public:
-    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter);
-    float fit(float tol);
-
-private:
     int k; // number of clusters
     int batchSize; // number of samples to use in each iteration
     int maxIter; // maximum number of iterations
@@ -31,6 +26,10 @@ private:
     float inertiaError(const std::vector<std::vector<float>>& batch);
     // normalized mutual information
     float nmiError();
+
+public:
+    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter);
+    float fit(float tol);
 };
 
 #endif //K_MEANS_H
