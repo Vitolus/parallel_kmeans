@@ -63,6 +63,8 @@ int main() {
         labels2.push_back(labels[i]);
     }
     k_means km((std::move(data)), labels2, 10, 30, 15);
-    std::cout << km.fit(0.1) << std::endl;
+    auto [fst, snd] = km.fit(0.1);
+    std::cout << "inertia value: " << fst << std::endl
+    << "nmi value: " << snd << std::endl;
     return 0;
 }
