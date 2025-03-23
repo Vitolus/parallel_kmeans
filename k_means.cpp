@@ -39,6 +39,24 @@ float k_means::fit(const float tol){
         prevCentroids = centroids;
     }
     scanAssign(dataset);
+
+    // remove later, used for debugging
+    for (int i=0; i<k; i++){
+        std::cout << "Centroid " << i << ": " << std::endl;
+        for (int j=0; j<28; j++){
+            for (int k=0; k<28; k++)
+                std::cout<<centroids[i][j*28+k] << " ";
+            std::cout << std::endl;
+        }
+    } // end show
+    // show clusters
+    for (int j=0; j<k; j++) {
+        std::cout << "Cluster " << j << ": ";
+        for (const int c : clusters[j])
+            std::cout << c << " ";
+        std::cout << std::endl;
+    } // end show
+
     return nmiError();
 }
 

@@ -1,6 +1,7 @@
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
+#include "k_means.h"
 
 // g++-14 -std=c++11 -O3 -fopenmp kmeans.cpp -o kmeans
 
@@ -43,6 +44,8 @@ int main() {
     std::vector<int> labels;
     load_MNIST("../data/mnist-images.txt", "../data/mnist-labels.txt", images, labels);
 
+    // test dataset loading
+    /*
     std::cout << "No. Images: " << images.size() << std::endl;
     for (int i=0; i<28; i++) {
         for (int j=0; j<28; j++)
@@ -50,5 +53,16 @@ int main() {
         std::cout << std::endl;
     }
     std::cout << "Image is " << labels[0] << std::endl;
+    */
+
+    // test k_means with 10 samples
+    std::vector<std::vector<float>> data;
+    std::vector<int> labels2;
+    for (int i=0; i<300; i++) {
+        data.push_back(images[i]);
+        labels2.push_back(labels[i]);
+    }
+    k_means km((std::move(data)), labels2, 10, 30, 15);
+    std::cout << km.fit(0.1) << std::endl;
     return 0;
 }
