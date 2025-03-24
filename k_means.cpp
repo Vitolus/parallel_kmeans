@@ -21,7 +21,7 @@ const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::
     }
 }
 
-std::pair<float, float> k_means::fit(const float tol){
+std::pair<float, float> k_means::fit(int n_threads, const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     float deltaChange = tol + 1.0;
     float prevChange = 0.0;
@@ -29,12 +29,14 @@ std::pair<float, float> k_means::fit(const float tol){
     auto i = 0;
     for(i = 0; deltaChange > tol && i < maxIter; i++){
         std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
+        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(const auto& x : batch){
             const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
             updateCentroid(x, counts, idx); // update the centroid based on a data point
         }
         scanAssign(batch); // assign data points to the closest centroid
         float totalChange = 0.0;
+        #pragma omp parallel for if(n_threads > 1) reduction(+:totalChange)
         for(auto j = 0; j < k; j++){
         totalChange += euclideanDistance(prevCentroids[j], j);
         }

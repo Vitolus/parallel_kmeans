@@ -2,6 +2,7 @@
 #define K_MEANS_H
 
 #include <vector>
+#include <omp.h>
 
 class k_means{
     int k; // number of clusters
@@ -29,7 +30,7 @@ class k_means{
 
 public:
     k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter);
-    std::pair<float, float> fit(float tol);
+    std::pair<float, float> fit(int n_threads, float tol);
 };
 
 #endif //K_MEANS_H
