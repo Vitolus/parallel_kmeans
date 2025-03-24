@@ -62,9 +62,12 @@ int main() {
         data.push_back(images[i]);
         labels2.push_back(labels[i]);
     }
-    k_means km((std::move(data)), labels2, 13, 256, 100);
-    auto [fst, snd] = km.fit(0.1);
-    std::cout << "inertia value: " << fst << std::endl
+    k_means km((std::move(data)), labels2, 10, 1000, 500);
+    auto time = omp_get_wtime();
+    auto [fst, snd] = km.fit(1, 0.1);
+    time = omp_get_wtime() - time;
+    std::cout << "Time: " << time << std::endl
+    << "inertia value: " << fst << std::endl
     << "nmi value: " << snd << std::endl;
     return 0;
 }
