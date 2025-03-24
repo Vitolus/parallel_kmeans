@@ -23,21 +23,25 @@ const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::
 
 std::pair<float, float> k_means::fit(const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
-    float totalChange = tol + 1.0;
+    float deltaChange = tol + 1.0;
+    float prevChange = 0.0;
     std::vector<std::vector<float>> prevCentroids = centroids;
     auto i = 0;
-    for(i = 0; totalChange > tol && i < maxIter; i++){
+    for(i = 0; deltaChange > tol && i < maxIter; i++){
         std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
         for(const auto& x : batch){
             const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
             updateCentroid(x, counts, idx); // update the centroid based on a data point
         }
         scanAssign(batch); // assign data points to the closest centroid
-        totalChange = 0.0;
+        float totalChange = 0.0;
         for(auto j = 0; j < k; j++){
         totalChange += euclideanDistance(prevCentroids[j], j);
         }
+        deltaChange = std::abs(totalChange - prevChange);
+        prevChange = totalChange;
         prevCentroids = centroids;
+        //std::cout << "delta change: " << deltaChange << std::endl;
     }
     scanAssign(dataset);
 
@@ -57,7 +61,9 @@ std::pair<float, float> k_means::fit(const float tol){
     for(auto j = 0; j < 10; j++){
         std::cout << "Label Cluster " << j << " size: " << labelClusters[j].size() << std::endl;
     } // end show
-    std::cout << "Number of iterations: " << i << std::endl;
+    std::cout << "Number of iterations: " << i << std::endl
+    << "delta change: " << deltaChange << std::endl;
+
 
     return {inertiaError(), nmiError()};
 }
