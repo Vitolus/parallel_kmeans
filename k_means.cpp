@@ -29,11 +29,12 @@ std::pair<float, float> k_means::fit(const float tol){
     for(i = 0; deltaChange > tol && i < maxIter; i++){
         std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
         std::vector<int> indices(batchSize);
-        //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(int j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
+        // no improvement with parallelization and give different results because changing the order of updates
         for(int j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             updateCentroid(x, counts, indices[j]); // update the centroid based on a data point
