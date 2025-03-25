@@ -28,10 +28,15 @@ std::pair<float, float> k_means::fit(const float tol){
     auto i = 0;
     for(i = 0; deltaChange > tol && i < maxIter; i++){
         std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
+        std::vector<int> indices(batchSize);
         //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
-        for(const auto& x : batch){
-            const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
-            updateCentroid(x, counts, idx); // update the centroid based on a data point
+        for(int j = 0; j < batchSize; j++){
+            const auto& x = batch[j];
+            indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
+        }
+        for(int j = 0; j < batchSize; j++){
+            const auto& x = batch[j];
+            updateCentroid(x, counts, indices[j]); // update the centroid based on a data point
         }
         scanAssign(batch); // assign data points to the closest centroid
         float totalChange = 0.0;
@@ -71,7 +76,7 @@ std::vector<std::vector<float>> k_means::sampleData() const{
     std::iota(indices.begin(), indices.end(), 0); // fill the vector with 0, 1, 2, ..., dataset.size()-1
     std::mt19937 gen(666);
     std::shuffle(indices.begin(), indices.end(), gen);
-    #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+    //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
     for(auto i = 0; i < batchSize; i++){ // sample batchSize shuffled data points
         batch[i] = dataset[indices[i]];
     }
@@ -98,7 +103,7 @@ int k_means::findCentroidIdx(const std::vector<float>& x) const{
 void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& counts, const int idx){
     counts[idx] += 1; // add one to the count of data points assigned to the centroid
     const float lr = 1.0 / counts[idx]; // learning rate decays with the number of data points assigned to the centroid
-    // no improvement with parallelization
+    //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(static)
     for(auto i = 0; i < 784; i++){ // update the centroid based on a data point
         centroids[idx][i] = (1 - lr) * centroids[idx][i] + lr * x[i]; // lower lr, less weight to the new data point
     }
