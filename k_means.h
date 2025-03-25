@@ -5,6 +5,7 @@
 #include <omp.h>
 
 class k_means{
+    int n_threads;
     int k; // number of clusters
     int batchSize; // number of samples to use in each iteration
     int maxIter; // maximum number of iterations
@@ -29,8 +30,8 @@ class k_means{
     float nmiError();
 
 public:
-    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int k, int batchSize, int maxIter);
-    std::pair<float, float> fit(int n_threads, float tol);
+    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int n_threads, int k, int batchSize, int maxIter);
+    std::pair<float, float> fit(float tol);
 };
 
 #endif //K_MEANS_H

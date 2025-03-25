@@ -2,8 +2,8 @@
 #include <iostream>
 #include <random>
 
-k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int k, const int batchSize,
-const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::move(data)) {
+k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int n_threads, const int k, const int batchSize,
+const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::move(data)) {
     std::mt19937 gen(666);
     centroids.resize(k);
     for(auto& centroid : centroids){ // initialize the centroids to random data points of dataset
@@ -20,7 +20,7 @@ const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::
     }
 }
 
-std::pair<float, float> k_means::fit(int n_threads, const float tol){
+std::pair<float, float> k_means::fit(const float tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     float deltaChange = tol + 1.0;
     float prevChange = 0.0;
@@ -28,14 +28,13 @@ std::pair<float, float> k_means::fit(int n_threads, const float tol){
     auto i = 0;
     for(i = 0; deltaChange > tol && i < maxIter; i++){
         std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
-        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+        //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(const auto& x : batch){
             const int idx = findCentroidIdx(x); // find the closest centroid idx for a data point
             updateCentroid(x, counts, idx); // update the centroid based on a data point
         }
         scanAssign(batch); // assign data points to the closest centroid
         float totalChange = 0.0;
-        #pragma omp parallel for if(n_threads > 1) reduction(+:totalChange) schedule(dynamic)
         for(auto j = 0; j < k; j++){
         totalChange += euclideanDistance(prevCentroids[j], j);
         }
@@ -84,9 +83,17 @@ for(auto i = 0; i < batchSize; i++){ // sample batchSize shuffled data points
 
 int k_means::findCentroidIdx(const std::vector<float>& x) const{
     int idx = 0;
+    float minDistance = euclideanDistance(x, 0);
+    #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
     for(auto i = 1; i < k; i++){ // find the closest centroid idx for a data point using Euclidean distance
-        if(euclideanDistance(x, i) < euclideanDistance(x, idx))
-            idx = i;
+        float distance = euclideanDistance(x, i);
+        #pragma omp critical
+        {
+            if(distance < minDistance) {
+                minDistance = distance;
+                idx = i;
+            }
+        }
     }
     return idx;
 }
