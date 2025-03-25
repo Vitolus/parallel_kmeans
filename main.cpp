@@ -62,12 +62,21 @@ int main() {
         data.push_back(images[i]);
         labels2.push_back(labels[i]);
     }
-    k_means km((std::move(data)), labels2, 10, 1000, 500);
-    auto time = omp_get_wtime();
-    auto [fst, snd] = km.fit(1, 0.1);
-    time = omp_get_wtime() - time;
-    std::cout << "Time: " << time << std::endl
-    << "inertia value: " << fst << std::endl
-    << "nmi value: " << snd << std::endl;
+    k_means km((std::move(images)), labels, 10, 10000, 100);
+    std::cout << "Fitting k_means..." << std::endl;
+    std::vector<double> times(10, 0.0);
+    std::vector<float> speedups(10, 1);
+    for(int i = 1; i <= 1; i++){
+        auto time = omp_get_wtime();
+        auto [fst, snd] = km.fit(4, 0.0);
+        times[i-1] = omp_get_wtime() - time;
+        speedups[i-1] = times[0] / times[i-1];
+        std::cout << "# threads: " << i << std::endl
+        << "Time: " << times[i-1] << std::endl
+        << "Speedup: " << speedups[i-1] << std::endl
+        << "inertia value: " << fst << std::endl
+        << "nmi value: " << snd << std::endl;
+    }
+
     return 0;
 }
