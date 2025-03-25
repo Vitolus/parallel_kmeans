@@ -1,13 +1,12 @@
 #include "k_means.h"
-#include <random>
 #include <iostream>
+#include <random>
 
 k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int k, const int batchSize,
 const int maxIter) : k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::move(data)) {
+    std::mt19937 gen(666);
     centroids.resize(k);
     for(auto& centroid : centroids){ // initialize the centroids to random data points of dataset
-        std::random_device rd;
-        std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dis(0, dataset.size() - 1);
         centroid = dataset[dis(gen)];
     }
@@ -36,7 +35,7 @@ std::pair<float, float> k_means::fit(int n_threads, const float tol){
         }
         scanAssign(batch); // assign data points to the closest centroid
         float totalChange = 0.0;
-        #pragma omp parallel for if(n_threads > 1) reduction(+:totalChange)
+        #pragma omp parallel for if(n_threads > 1) reduction(+:totalChange) schedule(dynamic)
         for(auto j = 0; j < k; j++){
         totalChange += euclideanDistance(prevCentroids[j], j);
         }
@@ -47,25 +46,13 @@ std::pair<float, float> k_means::fit(int n_threads, const float tol){
     }
     scanAssign(dataset);
 
-    // remove later, used for debugging
-    for (int c=0; c<k; c++){
-        std::cout << "Centroid " << c << ": " << std::endl;
-        for (int j=0; j<28; j++){
-            for (int l=0; l<28; l++)
-                std::cout<<centroids[c][j*28+l] << " ";
-            std::cout << std::endl;
-        }
-    } // end show
     // show clusters
     for(auto j=0; j<k; j++) {
-        std::cout << "Cluster " << j << " size: " << clusters[j].size() << std::endl;
+        std::cout << "Cluster " << j << " size: " << clusters[j].size()
+        << " / " << labelClusters[j].size() << std::endl;
     }
-    for(auto j = 0; j < 10; j++){
-        std::cout << "Label Cluster " << j << " size: " << labelClusters[j].size() << std::endl;
-    } // end show
     std::cout << "Number of iterations: " << i << std::endl
     << "delta change: " << deltaChange << std::endl;
-
 
     return {inertiaError(), nmiError()};
 }
@@ -82,9 +69,12 @@ std::vector<std::vector<float>> k_means::sampleData() const{
     std::vector<std::vector<float>> batch;
     std::vector<int> indices(dataset.size());
     std::iota(indices.begin(), indices.end(), 0); // fill the vector with 0, 1, 2, ..., dataset.size()-1
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::shuffle(indices.begin(), indices.end(), gen); // shuffle the indices
+    std::mt19937 gen(666);
+    std::shuffle(indices.begin(), indices.end(), gen);
+    // for(int i = indices.size()-1; i >= 0; i--){
+    //     std::uniform_int_distribution<int> dis(0, i);
+    //     std::swap(indices[i], indices[dis(gen)]); // shuffle the indices
+    // }
     batch.reserve(batchSize);
 for(auto i = 0; i < batchSize; i++){ // sample batchSize shuffled data points
         batch.push_back(dataset[indices[i]]);
