@@ -87,16 +87,11 @@ std::vector<std::vector<float>> k_means::sampleData() const{
 int k_means::findCentroidIdx(const std::vector<float>& x) const{
     int idx = 0;
     float minDistance = euclideanDistance(x, 0);
-    #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
     for(auto i = 1; i < k; i++){ // find the closest centroid idx for a data point using Euclidean distance
-        float distance = euclideanDistance(x, i);
-        #pragma omp critical
-        {
-            if(distance < minDistance) {
+        if(const float distance = euclideanDistance(x, i); distance < minDistance) {
                 minDistance = distance;
                 idx = i;
             }
-        }
     }
     return idx;
 }
