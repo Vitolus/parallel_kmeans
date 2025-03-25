@@ -64,7 +64,6 @@ std::pair<float, float> k_means::fit(const float tol){
 
 float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
     float sum = 0.0;
-    // no improvement with parallelization
     for(auto i = 0; i < 784; i++){ // calculate the Euclidean distance between a data point and a centroid
         sum += std::pow(x[i] - centroids[c_idx][i], 2); // sum of squared differences
     }
@@ -77,7 +76,6 @@ std::vector<std::vector<float>> k_means::sampleData() const{
     std::iota(indices.begin(), indices.end(), 0); // fill the vector with 0, 1, 2, ..., dataset.size()-1
     std::mt19937 gen(666);
     std::shuffle(indices.begin(), indices.end(), gen);
-    //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
     for(auto i = 0; i < batchSize; i++){ // sample batchSize shuffled data points
         batch[i] = dataset[indices[i]];
     }
@@ -99,7 +97,6 @@ int k_means::findCentroidIdx(const std::vector<float>& x) const{
 void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& counts, const int idx){
     counts[idx] += 1; // add one to the count of data points assigned to the centroid
     const float lr = 1.0 / counts[idx]; // learning rate decays with the number of data points assigned to the centroid
-    //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(static)
     for(auto i = 0; i < 784; i++){ // update the centroid based on a data point
         centroids[idx][i] = (1 - lr) * centroids[idx][i] + lr * x[i]; // lower lr, less weight to the new data point
     }
