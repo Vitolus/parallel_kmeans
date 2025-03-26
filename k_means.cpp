@@ -4,12 +4,7 @@
 
 k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int n_threads, const int k, const int batchSize,
 const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::move(data)) {
-    std::mt19937 gen(666);
     centroids.resize(k);
-    for(auto& centroid : centroids){ // initialize the centroids to random data points of dataset
-        std::uniform_int_distribution<int> dis(0, dataset.size() - 1);
-        centroid = dataset[dis(gen)];
-    }
     clusters.resize(k);
     labelClusters.resize(10);
     for(auto i = 0; i < labels.size(); i++){ // true cluster assignments
@@ -17,6 +12,10 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     }
     for(auto& cluster : labelClusters){
         cluster.shrink_to_fit();
+    }
+    for(auto i = 0; i < k; i++){
+        auto& centroid = centroids[i];
+        centroid = dataset[labelClusters[i][0]]; // initialize the centroids to the first data point of each true cluster
     }
 }
 
@@ -34,7 +33,7 @@ std::pair<float, float> k_means::fit(const float tol){
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
-        // no improvement with parallelization and give different results because changing the order of updates
+        // no parallelization improvement; give different results because changes order of updates, destroying seeding
         for(int j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             updateCentroid(x, counts, indices[j]); // update the centroid based on a data point
@@ -110,9 +109,7 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     for(auto i = 0; i < batch.size(); i++){ // assign data points to the closest centroid
         int idx = findCentroidIdx(batch[i]);
         #pragma omp critical
-        {
-            clusters[idx].push_back(i);
-        }
+        clusters[idx].push_back(i);
     }
     for(auto& cluster : clusters){
         cluster.shrink_to_fit();
