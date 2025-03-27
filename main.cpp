@@ -41,13 +41,71 @@ std::vector<int> &labels ) {
     file2.close();
 }
 
+constexpr int MAX_N_THREADS = 12;
+
+int findBestK(std::vector<std::vector<float>>& images, const std::vector<int>& labels,
+std::vector<float>& times, std::vector<float>& inertias, std::vector<float>& nmis){
+    for(int i = 2; i <= 10; i++){
+        std::cout << "\nk = " << i << std::endl;
+        auto km = k_means(std::vector<std::vector<float>>(images), labels, MAX_N_THREADS, i, 70000, 300);
+        const auto time = omp_get_wtime();
+        auto [fst, snd] = km.fit(0.0001);
+        times[i] = omp_get_wtime() - time;
+        inertias[i] = fst;
+        nmis[i] = snd;
+        std::cout << "inertia value: " << fst << std::endl
+        << "nmi value: " << snd << std::endl << std::endl;
+    }
+    const auto bestNmi = std::max_element(nmis.begin(), nmis.end());
+    const auto bestNmiIdx = std::distance(nmis.begin(), bestNmi);
+    std::cout << "Best nmi value: " << *bestNmi << " at k = " << bestNmiIdx << std::endl;
+    return bestNmiIdx;
+}
+
+int findBestBatchSize(std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k,
+std::vector<float>& times, std::vector<float>& inertias, std::vector<float>& nmis){
+    for(auto i = 2500; i <= 70000; i += 2500){
+        std::cout << "\nbatchSize = " << i << std::endl;
+        auto km = k_means(std::vector<std::vector<float>>(images), labels, MAX_N_THREADS, k, i, 300);
+        const auto time = omp_get_wtime();
+        auto [fst, snd] = km.fit(0.0001);
+        times[i] = omp_get_wtime() - time;
+        inertias[i] = fst;
+        nmis[i] = snd;
+        std::cout << "inertia value: " << fst << std::endl
+        << "nmi value: " << snd << std::endl << std::endl;
+    }
+    // best inertia value and index in array
+    const auto bestInertia = std::min_element(inertias.begin(), inertias.end());
+    const auto bestInertiaIdx = std::distance(inertias.begin(), bestInertia);
+    // best nmi value and index in array
+    const auto bestNmi = std::max_element(nmis.begin(), nmis.end());
+    const auto bestNmiIdx = std::distance(nmis.begin(), bestNmi);
+    std::cout << "Best inertia value: " << *bestInertia << " at batchSize = " << bestInertiaIdx << std::endl
+    << "Best nmi value: " << *bestNmi << " at batchSize = " << bestNmiIdx << std::endl;
+    return bestInertiaIdx;
+}
+
+void execute(std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize,
+std::vector<float>& times, std::vector<float>& speedups){
+    for(int i = 1; i <= MAX_N_THREADS; i++){
+        std::cout << "\n# threads = " << i << std::endl;
+        auto km = k_means(std::vector<std::vector<float>>(images), labels, i, k, batchSize, 300);
+        const auto time = omp_get_wtime();
+        auto [fst, snd] = km.fit(0.0001);
+        times[i-1] = omp_get_wtime() - time;
+        speedups[i-1] = times[0] / times[i-1];
+        std::cout << "inertia value: " << fst << std::endl
+        << "nmi value: " << snd << std::endl << std::endl;
+    }
+}
+
 int main() {
-    std::vector< std::vector<float> > images;
+    std::vector<std::vector<float>> images;
     std::vector<int> labels;
     load_MNIST("../data/mnist-images.txt", "../data/mnist-labels.txt", images, labels);
 
     // test dataset loading
-    /*
     std::cout << "No. Images: " << images.size() << std::endl;
     for (int i=0; i<28; i++) {
         for (int j=0; j<28; j++)
@@ -55,43 +113,22 @@ int main() {
         std::cout << std::endl;
     }
     std::cout << "Image is " << labels[0] << std::endl;
-    */
 
-
-    std::cout << "Fitting k_means..." << std::endl;
-    std::vector<float> times(20, std::numeric_limits<float>::max());
-    std::vector<float> speedups(20, 0);
+    int k = 8;
+    int batchSize = 2500;
+    std::vector<float> times(MAX_N_THREADS, std::numeric_limits<float>::max());
+    std::vector<float> speedups(MAX_N_THREADS, 0);
     std::vector<float> inertias(10, std::numeric_limits<float>::max());
     std::vector<float> nmis(10, 0.0);
-    for(int i = 2; i < 10; i++){
-        auto km = k_means(std::vector<std::vector<float>>(images), labels, 12, i, 70000, 300);
-        const auto time = omp_get_wtime();
-        auto [fst, snd] = km.fit(0.0001);
-        times[i] = omp_get_wtime() - time;
-        inertias[i] = fst;
-        nmis[i] = snd;
-        std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl;
-    }
-    // best inertia value and index in array
-    const auto best_inertia = std::min_element(inertias.begin(), inertias.end());
-    const auto best_inertia_idx = std::distance(inertias.begin(), best_inertia);
-    // best nmi value and index in array
-    const auto best_nmi = std::max_element(nmis.begin(), nmis.end());
-    const auto best_nmi_idx = std::distance(nmis.begin(), best_nmi);
-    std::cout << "Best inertia value: " << *best_inertia << " at k = " << best_inertia_idx << std::endl
-    << "Best nmi value: " << *best_nmi << " at k = " << best_nmi_idx << std::endl;
-    for(int i = 13; i <= 12; i++){
-        auto km = k_means(std::vector<std::vector<float>>(images), labels, i, 10, 70000, 300);
-        const auto time = omp_get_wtime();
-        auto [fst, snd] = km.fit(0.0001);
-        times[i-1] = omp_get_wtime() - time;
-        speedups[i-1] = times[0] / times[i-1];
-        std::cout << "# threads: " << i << std::endl
-        << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl;
-    }
-    for(int i = 1; i <= 20; i++){
+    // k = 8 is the best
+    std::cout << "Finding best k..." << std::endl;
+    k = findBestK(images, labels, times, inertias, nmis);
+    // best batchSize = ???
+    std::cout << "Finding best batchSize..." << std::endl;
+    batchSize = findBestBatchSize(images, labels, k, times, inertias, nmis);
+    std::cout << "Fitting k_means..." << std::endl;
+    execute(images, labels, k, batchSize, times, speedups);
+    for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "# threads: " << i << std::endl
         << "Time: " << times[i-1] << " Speedup: " << speedups[i-1] << std::endl;
     }
