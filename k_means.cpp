@@ -19,10 +19,10 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     }
 }
 
-std::pair<float, float> k_means::fit(const float tol){
+std::pair<double, double> k_means::fit(const double tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
-    float deltaChange = tol + 1.0;
-    float prevChange = 0.0;
+    double deltaChange = tol + 1.0;
+    double prevChange = 0.0;
     std::vector<std::vector<float>> prevCentroids = centroids;
     auto i = 0;
     for(i = 0; deltaChange > tol && i < maxIter; i++){
@@ -39,7 +39,7 @@ std::pair<float, float> k_means::fit(const float tol){
             updateCentroid(x, counts, indices[j]); // update the centroid based on a data point
         }
         scanAssign(batch); // assign data points to the closest centroid
-        float totalChange = 0.0;
+        double totalChange = 0.0;
         for(auto j = 0; j < k; j++){
         totalChange += euclideanDistance(prevCentroids[j], j);
         }
@@ -61,8 +61,8 @@ std::pair<float, float> k_means::fit(const float tol){
     return {inertiaError(), nmiError()};
 }
 
-float k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
-    float sum = 0.0;
+double k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
+    double sum = 0.0;
     for(auto i = 0; i < 784; i++){ // calculate the Euclidean distance between a data point and a centroid
         sum += std::pow(x[i] - centroids[c_idx][i], 2); // sum of squared differences
     }
@@ -83,9 +83,9 @@ std::vector<std::vector<float>> k_means::sampleData() const{
 
 int k_means::findCentroidIdx(const std::vector<float>& x) const{
     int idx = 0;
-    float minDistance = euclideanDistance(x, 0);
+    double minDistance = euclideanDistance(x, 0);
     for(auto i = 1; i < k; i++){ // find the closest centroid idx for a data point using Euclidean distance
-        if(const float distance = euclideanDistance(x, i); distance < minDistance) {
+        if(const double distance = euclideanDistance(x, i); distance < minDistance) {
                 minDistance = distance;
                 idx = i;
             }
@@ -95,7 +95,7 @@ int k_means::findCentroidIdx(const std::vector<float>& x) const{
 
 void k_means::updateCentroid(const std::vector<float>& x, std::vector<int>& counts, const int idx){
     counts[idx] += 1; // add one to the count of data points assigned to the centroid
-    const float lr = 1.0 / counts[idx]; // learning rate decays with the number of data points assigned to the centroid
+    const double lr = 1.0 / counts[idx]; // learning rate decays with the number of data points assigned to the centroid
     for(auto i = 0; i < 784; i++){ // update the centroid based on a data point
         centroids[idx][i] = (1 - lr) * centroids[idx][i] + lr * x[i]; // lower lr, less weight to the new data point
     }
@@ -116,8 +116,8 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     }
 }
 
-float k_means::inertiaError(){
-    float inertia = 0.0;
+double k_means::inertiaError(){
+    double inertia = 0.0;
     for(auto i = 0; i < k; i++){
         for(const int p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
             inertia += std::pow(euclideanDistance(dataset[p], i), 2);
@@ -126,17 +126,17 @@ float k_means::inertiaError(){
     return inertia;
 }
 
-float k_means::nmiError(){
-    float hentropyClusters = 0.0;
-    float hentropyLabels = 0.0;
-    float mutualInformation = 0.0;
+double k_means::nmiError(){
+    double hentropyClusters = 0.0;
+    double hentropyLabels = 0.0;
+    double mutualInformation = 0.0;
     for(const auto& cluster : clusters){
-        const float ratio = static_cast<float>(cluster.size()) / dataset.size();
+        const double ratio = static_cast<double>(cluster.size()) / dataset.size();
         hentropyClusters += ratio * std::log2(ratio);
     }
     hentropyClusters *= -1;
     for(const auto& labelCluster : labelClusters){
-        const float ratio = static_cast<float>(labelCluster.size()) / dataset.size();
+        const double ratio = static_cast<double>(labelCluster.size()) / dataset.size();
         hentropyLabels += ratio * std::log2(ratio);
     }
     hentropyLabels *= -1;
@@ -146,8 +146,8 @@ float k_means::nmiError(){
             std::set_intersection(cluster.begin(), cluster.end(),
             labelCluster.begin(), labelCluster.end(), std::back_inserter(intersection));
             if (intersection.empty()) continue; //by definition, log2(0) = 0
-            mutualInformation += (static_cast<float>(intersection.size()) / dataset.size()) *
-            std::log2(static_cast<float>((dataset.size() * intersection.size())) /
+            mutualInformation += (static_cast<double>(intersection.size()) / dataset.size()) *
+            std::log2(static_cast<double>((dataset.size() * intersection.size())) /
             (cluster.size() * labelCluster.size()));
         }
     }

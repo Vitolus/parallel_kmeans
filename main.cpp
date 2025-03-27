@@ -44,7 +44,7 @@ std::vector<int> &labels ) {
 constexpr int MAX_N_THREADS = 12;
 
 int findBestK(std::vector<std::vector<float>>& images, const std::vector<int>& labels,
-std::vector<float>& times, std::vector<float>& inertias, std::vector<float>& nmis){
+std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& nmis){
     for(int i = 2; i <= 10; i++){
         std::cout << "\nk = " << i << std::endl;
         auto km = k_means(std::vector<std::vector<float>>(images), labels, MAX_N_THREADS, i, 70000, 300);
@@ -63,7 +63,7 @@ std::vector<float>& times, std::vector<float>& inertias, std::vector<float>& nmi
 }
 
 int findBestBatchSize(std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k,
-std::vector<float>& times, std::vector<float>& inertias, std::vector<float>& nmis){
+std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& nmis){
     for(auto i = 2500; i <= 70000; i += 2500){
         std::cout << "\nbatchSize = " << i << std::endl;
         auto km = k_means(std::vector<std::vector<float>>(images), labels, MAX_N_THREADS, k, i, 300);
@@ -87,7 +87,7 @@ std::vector<float>& times, std::vector<float>& inertias, std::vector<float>& nmi
 }
 
 void execute(std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize,
-std::vector<float>& times, std::vector<float>& speedups){
+std::vector<double>& times, std::vector<double>& speedups){
     for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "\n# threads = " << i << std::endl;
         auto km = k_means(std::vector<std::vector<float>>(images), labels, i, k, batchSize, 300);
@@ -116,10 +116,10 @@ int main() {
 
     int k = 8;
     int batchSize = 2500;
-    std::vector<float> times(MAX_N_THREADS, std::numeric_limits<float>::max());
-    std::vector<float> speedups(MAX_N_THREADS, 0);
-    std::vector<float> inertias(10, std::numeric_limits<float>::max());
-    std::vector<float> nmis(10, 0.0);
+    std::vector<double> times(MAX_N_THREADS, std::numeric_limits<double>::max());
+    std::vector<double> speedups(MAX_N_THREADS, 0);
+    std::vector<double> inertias(10, std::numeric_limits<double>::max());
+    std::vector<double> nmis(10, 0.0);
     // k = 8 is the best
     std::cout << "Finding best k..." << std::endl;
     k = findBestK(images, labels, times, inertias, nmis);

@@ -15,7 +15,7 @@ class k_means{
     std::vector<std::vector<float>> centroids; // cluster centers
 
     // Euclidean distance between a data point and a cluster center
-    [[nodiscard]] float euclideanDistance(const std::vector<float>& x, int c_idx) const;
+    [[nodiscard]] double euclideanDistance(const std::vector<float>& x, int c_idx) const;
     // sample a batch of data points
     [[nodiscard]] std::vector<std::vector<float>> sampleData() const;
     // find the closest centroid idx for a data point
@@ -25,13 +25,13 @@ class k_means{
     // assign data points to the closest centroid
     void scanAssign(const std::vector<std::vector<float>>& batch);
     // sum of squared distances of samples to their closest cluster center
-    float inertiaError();
+    double inertiaError();
     // normalized mutual information
-    float nmiError();
+    double nmiError();
 
 public:
     k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int n_threads, int k, int batchSize, int maxIter);
-    std::pair<float, float> fit(float tol);
+    std::pair<double, double> fit(double tol);
 };
 
 #endif //K_MEANS_H
