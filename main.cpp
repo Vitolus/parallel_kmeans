@@ -43,11 +43,11 @@ std::vector<int> &labels ) {
 
 constexpr int MAX_N_THREADS = 12;
 
-int findBestK(std::vector<std::vector<float>>& images, const std::vector<int>& labels,
+int findBestK(const std::vector<std::vector<float>>& images, const std::vector<int>& labels,
 std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& nmis){
     for(int i = 2; i <= 10; i++){
         std::cout << "\nk = " << i << std::endl;
-        auto km = k_means(std::vector<std::vector<float>>(images), labels, MAX_N_THREADS, i, 70000, 300);
+        auto km = k_means(images, labels, MAX_N_THREADS, i, 70000, 300);
         const auto time = omp_get_wtime();
         auto [fst, snd] = km.fit(0.0001);
         times[i] = omp_get_wtime() - time;
@@ -62,11 +62,11 @@ std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& 
     return bestNmiIdx;
 }
 
-int findBestBatchSize(std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k,
+int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k,
 std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& nmis){
     for(auto i = 2500; i <= 70000; i += 2500){
         std::cout << "\nbatchSize = " << i << std::endl;
-        auto km = k_means(std::vector<std::vector<float>>(images), labels, MAX_N_THREADS, k, i, 300);
+        auto km = k_means(images, labels, MAX_N_THREADS, k, i, 300);
         const auto time = omp_get_wtime();
         auto [fst, snd] = km.fit(0.0001);
         times[i] = omp_get_wtime() - time;
@@ -86,11 +86,11 @@ std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& 
     return bestInertiaIdx;
 }
 
-void execute(std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize,
+void execute(const std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize,
 std::vector<double>& times, std::vector<double>& speedups){
     for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "\n# threads = " << i << std::endl;
-        auto km = k_means(std::vector<std::vector<float>>(images), labels, i, k, batchSize, 300);
+        auto km = k_means(images, labels, i, k, batchSize, 300);
         const auto time = omp_get_wtime();
         auto [fst, snd] = km.fit(0.0001);
         times[i-1] = omp_get_wtime() - time;

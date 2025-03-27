@@ -30,7 +30,7 @@ class k_means{
     double nmiError();
 
 public:
-    k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, int n_threads, int k, int batchSize, int maxIter);
+    k_means(const std::vector<std::vector<float>>& data, const std::vector<int>& labels, int n_threads, int k, int batchSize, int maxIter);
     std::pair<double, double> fit(double tol);
 };
 

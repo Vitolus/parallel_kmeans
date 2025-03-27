@@ -2,8 +2,8 @@
 #include <iostream>
 #include <random>
 
-k_means::k_means(std::vector<std::vector<float>>&& data, const std::vector<int>& labels, const int n_threads, const int k, const int batchSize,
-const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(maxIter), dataset(std::move(data)) {
+k_means::k_means(const std::vector<std::vector<float>>& data, const std::vector<int>& labels, const int n_threads, const int k, const int batchSize,
+const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(maxIter), dataset(data) {
     centroids.resize(k);
     clusters.resize(k);
     labelClusters.resize(10);
