@@ -2,8 +2,8 @@
 #include <iostream>
 #include <random>
 
-k_means::k_means(const std::vector<std::vector<float>>& data, const std::vector<int>& labels, const int n_threads, const int k, const int batchSize,
-const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(maxIter), dataset(data) {
+k_means::k_means(const std::vector<std::vector<float>>& dataset, const std::vector<int>& labels, const int n_threads, const int k, const int batchSize,
+const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(maxIter) {
     centroids.resize(k);
     clusters.resize(k);
     labelClusters.resize(10);
@@ -19,14 +19,14 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     }
 }
 
-std::pair<double, double> k_means::fit(const double tol){
+std::vector<double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     double deltaChange = tol + 1.0;
     double prevChange = 0.0;
     std::vector<std::vector<float>> prevCentroids = centroids;
     auto i = 0;
     for(i = 0; deltaChange > tol && i < maxIter; i++){
-        std::vector<std::vector<float>> batch = sampleData(); // sample a batch of data points
+        std::vector<std::vector<float>> batch = sampleData(dataset); // sample a batch of data points
         std::vector<int> indices(batchSize);
         #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(int j = 0; j < batchSize; j++){
@@ -58,7 +58,7 @@ std::pair<double, double> k_means::fit(const double tol){
     std::cout << "Number of iterations: " << i << std::endl
     << "delta change: " << deltaChange << std::endl;
 
-    return {inertiaError(), nmiError()};
+    return {inertiaError(dataset), nmiError(dataset.size())};
 }
 
 double k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) const{
@@ -69,7 +69,7 @@ double k_means::euclideanDistance(const std::vector<float>& x, const int c_idx) 
     return std::sqrt(sum);
 }
 
-std::vector<std::vector<float>> k_means::sampleData() const{
+std::vector<std::vector<float>> k_means::sampleData(const std::vector<std::vector<float>>& dataset) const{
     std::vector<std::vector<float>> batch(batchSize);
     std::vector<int> indices(dataset.size());
     std::iota(indices.begin(), indices.end(), 0); // fill the vector with 0, 1, 2, ..., dataset.size()-1
@@ -116,7 +116,7 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     }
 }
 
-double k_means::inertiaError(){
+double k_means::inertiaError(const std::vector<std::vector<float>>& dataset){
     double inertia = 0.0;
     for(auto i = 0; i < k; i++){
         for(const int p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
@@ -126,17 +126,17 @@ double k_means::inertiaError(){
     return inertia;
 }
 
-double k_means::nmiError(){
+double k_means::nmiError(const int size){
     double hentropyClusters = 0.0;
     double hentropyLabels = 0.0;
     double mutualInformation = 0.0;
     for(const auto& cluster : clusters){
-        const double ratio = static_cast<double>(cluster.size()) / dataset.size();
+        const double ratio = static_cast<double>(cluster.size()) / size;
         hentropyClusters += ratio * std::log2(ratio);
     }
     hentropyClusters *= -1;
     for(const auto& labelCluster : labelClusters){
-        const double ratio = static_cast<double>(labelCluster.size()) / dataset.size();
+        const double ratio = static_cast<double>(labelCluster.size()) / size;
         hentropyLabels += ratio * std::log2(ratio);
     }
     hentropyLabels *= -1;
@@ -146,8 +146,8 @@ double k_means::nmiError(){
             std::set_intersection(cluster.begin(), cluster.end(),
             labelCluster.begin(), labelCluster.end(), std::back_inserter(intersection));
             if (intersection.empty()) continue; //by definition, log2(0) = 0
-            mutualInformation += (static_cast<double>(intersection.size()) / dataset.size()) *
-            std::log2(static_cast<double>((dataset.size() * intersection.size())) /
+            mutualInformation += (static_cast<double>(intersection.size()) / size) *
+            std::log2(static_cast<double>((size * intersection.size())) /
             (cluster.size() * labelCluster.size()));
         }
     }

@@ -49,12 +49,12 @@ std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& 
         std::cout << "\nk = " << i << std::endl;
         auto km = k_means(images, labels, MAX_N_THREADS, i, 70000, 300);
         const auto time = omp_get_wtime();
-        auto [fst, snd] = km.fit(0.0001);
+        auto errors = km.fit(images, 0.0001);
         times[i] = omp_get_wtime() - time;
-        inertias[i] = fst;
-        nmis[i] = snd;
-        std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl << std::endl;
+        inertias[i] = errors[0];
+        nmis[i] = errors[1];
+        std::cout << "inertia value: " << errors[0] << std::endl
+        << "nmi value: " << errors[1] << std::endl << std::endl;
     }
     const auto bestNmi = std::max_element(nmis.begin(), nmis.end());
     const auto bestNmiIdx = std::distance(nmis.begin(), bestNmi);
@@ -68,12 +68,12 @@ std::vector<double>& times, std::vector<double>& inertias, std::vector<double>& 
         std::cout << "\nbatchSize = " << i << std::endl;
         auto km = k_means(images, labels, MAX_N_THREADS, k, i, 300);
         const auto time = omp_get_wtime();
-        auto [fst, snd] = km.fit(0.0001);
+        auto errors = km.fit(images, 0.0001);
         times[i] = omp_get_wtime() - time;
-        inertias[i] = fst;
-        nmis[i] = snd;
-        std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl << std::endl;
+        inertias[i] = errors[0];
+        nmis[i] = errors[1];
+        std::cout << "inertia value: " << errors[0] << std::endl
+        << "nmi value: " << errors[1] << std::endl << std::endl;
     }
     // best inertia value and index in array
     const auto bestInertia = std::min_element(inertias.begin(), inertias.end());
@@ -92,11 +92,11 @@ std::vector<double>& times, std::vector<double>& speedups){
         std::cout << "\n# threads = " << i << std::endl;
         auto km = k_means(images, labels, i, k, batchSize, 300);
         const auto time = omp_get_wtime();
-        auto [fst, snd] = km.fit(0.0001);
+        auto errors = km.fit(images, 0.0001);
         times[i-1] = omp_get_wtime() - time;
         speedups[i-1] = times[0] / times[i-1];
-        std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl << std::endl;
+        std::cout << "inertia value: " << errors[0] << std::endl
+        << "nmi value: " << errors[1] << std::endl << std::endl;
     }
 }
 
@@ -114,7 +114,7 @@ int main() {
     }
     std::cout << "Image is " << labels[0] << std::endl;
 
-    int k = 8;
+    int k = 10;
     int batchSize = 2500;
     std::vector<double> times(MAX_N_THREADS, std::numeric_limits<double>::max());
     std::vector<double> speedups(MAX_N_THREADS, 0);
@@ -122,7 +122,7 @@ int main() {
     std::vector<double> nmis(10, 0.0);
     // k = 8 is the best
     std::cout << "Finding best k..." << std::endl;
-    k = findBestK(images, labels, times, inertias, nmis);
+    //k = findBestK(images, labels, times, inertias, nmis);
     // best batchSize = ???
     std::cout << "Finding best batchSize..." << std::endl;
     batchSize = findBestBatchSize(images, labels, k, times, inertias, nmis);
