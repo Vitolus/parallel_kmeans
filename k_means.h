@@ -14,13 +14,13 @@ class k_means{
     std::vector<std::vector<float>> centroids; // cluster centers
 
     // Euclidean distance between a data point and a cluster center
-    [[nodiscard]] double euclideanDistance(const std::vector<float>& x, int c_idx) const;
+    [[nodiscard]] double squaredEuclideanDistance(const std::vector<float>& x, int c_idx) const;
+    // compute the difference in change of the centroids
+    [[nodiscard]] double deltaChange(double& prevChange, std::vector<std::vector<float>>& prevCentroids) const;
     // sample a batch of data points
     [[nodiscard]] std::vector<std::vector<float>> sampleData(const std::vector<std::vector<float>>& dataset) const;
     // find the closest centroid idx for a data point
     [[nodiscard]] int findCentroidIdx(const std::vector<float>& x) const;
-    // update the centroid based on a data point
-    void updateCentroid(const std::vector<float>& x, std::vector<int>& counts, int idx);
     // assign data points to the closest centroid
     void scanAssign(const std::vector<std::vector<float>>& batch);
     // sum of squared distances of samples to their closest cluster center

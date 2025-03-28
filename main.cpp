@@ -115,19 +115,30 @@ int main() {
     std::cout << "Image is " << labels[0] << std::endl;
 
     int k = 10;
-    int batchSize = 2500;
+    int batchSize = 7000;
     std::vector<double> times(MAX_N_THREADS, std::numeric_limits<double>::max());
-    std::vector<double> speedups(MAX_N_THREADS, 0);
+    std::vector<double> speedups(MAX_N_THREADS);
     std::vector<double> inertias(10, std::numeric_limits<double>::max());
-    std::vector<double> nmis(10, 0.0);
+    std::vector<double> nmis(10);
     // k = 8 is the best
     std::cout << "Finding best k..." << std::endl;
     //k = findBestK(images, labels, times, inertias, nmis);
     // best batchSize = ???
     std::cout << "Finding best batchSize..." << std::endl;
-    batchSize = findBestBatchSize(images, labels, k, times, inertias, nmis);
+    //batchSize = findBestBatchSize(images, labels, k, times, inertias, nmis);
+
+    for(auto i = 0; i < 15; i++){
+        std::cout << "Execution " << i << std::endl;
+        auto km = k_means(images, labels, MAX_N_THREADS, k, batchSize, 300);
+        const auto time = omp_get_wtime();
+        auto [fst, snd] = km.fit(images, 0.0001);
+        times[0] = omp_get_wtime() - time;
+        std::cout << "inertia value: " << fst << std::endl
+        << "nmi value: " << snd << std::endl << std::endl;
+    }
+
     std::cout << "Fitting k_means..." << std::endl;
-    execute(images, labels, k, batchSize, times, speedups);
+    //execute(images, labels, k, batchSize, times, speedups);
     for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "# threads: " << i << std::endl
         << "Time: " << times[i-1] << " Speedup: " << speedups[i-1] << std::endl;
