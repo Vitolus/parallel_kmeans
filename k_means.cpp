@@ -19,7 +19,7 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     }
 }
 
-std::vector<double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol){
+std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol){
     std::vector<int> counts(k, 0); // count the number of data points assigned to each centroid
     double deltaChange = tol + 1.0;
     double prevChange = 0.0;
