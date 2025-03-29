@@ -47,7 +47,7 @@ int findBestK(const std::vector<std::vector<float>>& images, const std::vector<i
     int maxNmiIdx = 0;
     std::vector<double> nmis(9);
     int j = 0;
-    for(size_t i = 2; i <= 10; i++){
+    for(int i = 2; i <= 10; i++){
         std::cout << "\nk = " << i << std::endl;
         auto* km = new k_means(images, labels, MAX_N_THREADS, i, 70000, 300);
         auto [fst, snd] = km->fit(images, 0.0001);
@@ -59,7 +59,7 @@ int findBestK(const std::vector<std::vector<float>>& images, const std::vector<i
         std::cout << "inertia value: " << fst << std::endl
         << "nmi value: " << snd << std::endl << std::endl;
     }
-    std::cout << "Best nmi value: " << nmis[maxNmiIdx] << std::endl;
+    std::cout << "Best nmi value: " << nmis[maxNmiIdx] << "at k = " << maxNmiIdx + 2 << std::endl;
     return maxNmiIdx;
 }
 
@@ -69,7 +69,7 @@ int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::
     std::vector<double> inertias(28);
     std::vector<double> nmis(28);
     int j = 0;
-    for(size_t i = 2500; i <= 70000; i += 2500){
+    for(int i = 2500; i <= 70000; i += 2500){
         std::cout << "\nbatchSize = " << i << std::endl;
         auto* km = new k_means(images, labels, MAX_N_THREADS, k, i, 300);
         auto [fst, snd] = km->fit(images, 0.0001);
@@ -83,8 +83,8 @@ int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::
         std::cout << "inertia value: " << fst << std::endl
         << "nmi value: " << snd << std::endl << std::endl;
     }
-    std::cout << "Best inertia value: " << inertias[minInertiaIdx] << std::endl
-    << "Best nmi value: " << nmis[maxNmiIdx] << std::endl;
+    std::cout << "Best inertia value: " << inertias[minInertiaIdx] << "at batchSize = " << (minInertiaIdx + 1) * 2500 << std::endl
+    << "Best nmi value: " << nmis[maxNmiIdx] << "at batchSize = " << (maxNmiIdx + 1) * 2500 << std::endl;
     return minInertiaIdx;
 }
 
@@ -123,23 +123,25 @@ int main() {
     std::vector<double> times(MAX_N_THREADS, std::numeric_limits<double>::max());
     std::vector<double> speedups(MAX_N_THREADS);
     // k = 8 is the best
-    std::cout << "Finding best k..." << std::endl;
+    std::cout << "\nFinding best k..." << std::endl;
     k = findBestK(images, labels);
     // best batchSize = ???
-    std::cout << "Finding best batchSize..." << std::endl;
+    std::cout << "\nFinding best batchSize..." << std::endl;
     batchSize = findBestBatchSize(images, labels, k);
 
     for(auto i = 0; i < 5; i++){
-        std::cout << "Execution " << i << std::endl;
-        auto km = k_means(images, labels, MAX_N_THREADS, k, batchSize, 300);
+        std::cout << "\nExecution " << i << std::endl;
+        auto* km = new k_means(images, labels, MAX_N_THREADS, k, batchSize, 300);
         const auto time = omp_get_wtime();
-        auto [fst, snd] = km.fit(images, 0.0001);
+        auto [fst, snd] = km->fit(images, 0.0001);
         times[0] = omp_get_wtime() - time;
+        delete km;
+        km = nullptr;
         std::cout << "inertia value: " << fst << std::endl
         << "nmi value: " << snd << std::endl << std::endl;
     }
 
-    std::cout << "Fitting k_means..." << std::endl;
+    std::cout << "\nFitting k_means..." << std::endl;
     execute(images, labels, k, batchSize, times, speedups);
     for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "# threads: " << i << std::endl

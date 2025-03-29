@@ -9,7 +9,7 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     centroids.resize(k);
     clusters.resize(k);
     labelClusters.resize(10);
-    for(size_t i = 0; i < labels.size(); i++){ // true cluster assignments
+    for(int i = 0; i < labels.size(); i++){ // true cluster assignments
         labelClusters[labels[i]].push_back(i);
     }
     for(auto& cluster : labelClusters){
@@ -39,28 +39,25 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
-        // no parallelization improvement; give different results because changes order of updates, destroying seeding
-        //TODO: do tests with and without parallelization to see if it is worth it
         #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
-            int idx = indices[j];
-            int curCount;
+            const int idx = indices[j];
             #pragma omp atomic capture
-            curCount = ++counts[idx];
-            const double lr = 1.0 / curCount; // learning rate decays with the number of data points assigned to the centroid
+            const int curCount = ++counts[idx];
+            const float lr = 1.0 / curCount; // learning rate decays with the number of data points assigned to the centroid
             omp_set_lock(&locks[idx]);
             for(size_t l = 0; l < 784; l++){ // update the centroid based on a data point
                 centroids[idx][l] = (1 - lr) * centroids[idx][l] + lr * x[l]; // lower lr, less weight to the new data point
             }
             omp_unset_lock(&locks[idx]);
         }
-        //scanAssign(batch); // assign data points to the closest centroid
+        //scanAssign(batch); //TODO: check if useless
         delta = deltaChange(prevChange, prevCentroids);
         //std::cout << "delta change: " << deltaChange << std::endl;
     }
-    for(size_t i = 0; i < k; i++){
-        omp_destroy_lock(&locks[i]);
+    for(size_t j = 0; j < k; j++){
+        omp_destroy_lock(&locks[j]);
     }
     scanAssign(dataset);
 
@@ -87,7 +84,7 @@ double k_means::squaredEuclideanDistance(const std::vector<float>& x, const int 
 double k_means::deltaChange(double& prevChange, std::vector<std::vector<float>>& prevCentroids) const{
     double delta = 0.0;
     double totalChange = 0.0;
-    for(size_t i = 0; i < k; i++){
+    for(int i = 0; i < k; i++){
         totalChange += std::sqrt(squaredEuclideanDistance(prevCentroids[i], i));
     }
     delta = std::abs(totalChange - prevChange);
@@ -111,7 +108,7 @@ std::vector<std::vector<float>> k_means::sampleData(const std::vector<std::vecto
 int k_means::findCentroidIdx(const std::vector<float>& x) const{
     int idx = 0;
     double minDistance = squaredEuclideanDistance(x, 0);
-    for(size_t i = 1; i < k; i++){ // find the closest centroid idx for a data point using Euclidean distance
+    for(int i = 1; i < k; i++){ // find the closest centroid idx for a data point using Euclidean distance
         if(const double distance = squaredEuclideanDistance(x, i); distance < minDistance) {
                 minDistance = distance;
                 idx = i;
@@ -130,8 +127,7 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
         const int tid = omp_get_thread_num();
         #pragma omp for schedule(dynamic)
         for(size_t i = 0; i < batch.size(); i++){ // assign data points to the closest centroid
-            int idx = findCentroidIdx(batch[i]);
-            localClusters[tid][idx].push_back(i);
+            localClusters[tid][findCentroidIdx(batch[i])].push_back(i);
         }
     }
     // merge local clusters
@@ -147,7 +143,7 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
 
 double k_means::inertiaError(const std::vector<std::vector<float>>& dataset){
     double inertia = 0.0;
-    for(size_t i = 0; i < k; i++){
+    for(int i = 0; i < k; i++){
         for(const int p : clusters[i]){ // sum of squared distances of samples to their closest cluster center
             inertia += squaredEuclideanDistance(dataset[p], i);
         }
