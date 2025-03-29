@@ -64,7 +64,7 @@ int findBestK(const std::vector<std::vector<float>>& images, const std::vector<i
 }
 
 int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k){
-    int minInertiaIdx = std::numeric_limits<int>::max();
+    int minInertiaIdx = 0;
     int maxNmiIdx = 0;
     std::vector<double> inertias(28);
     std::vector<double> nmis(28);
