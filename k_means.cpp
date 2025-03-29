@@ -41,7 +41,7 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
         }
         // no parallelization improvement; give different results because changes order of updates, destroying seeding
         //TODO: do tests with and without parallelization to see if it is worth it
-        //#pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             int idx = indices[j];
