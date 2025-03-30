@@ -21,7 +21,7 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     }
 }
 
-std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol, const bool fitting){
+std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol){
     std::vector<int> counts(k); // count the number of data points assigned to each centroid
     double delta = tol + 1.0;
     double prevChange = 0.0;
@@ -39,7 +39,7 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
-        #pragma omp parallel for if(n_threads > 1 && fitting) num_threads(n_threads) schedule(dynamic)
+        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             const int idx = indices[j];
@@ -118,9 +118,6 @@ int k_means::findCentroidIdx(const std::vector<float>& x) const{
 }
 
 void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
-    for(auto& cluster : clusters){
-        cluster.clear();
-    }
     std::vector<std::vector<std::vector<int>>> localClusters(n_threads, std::vector<std::vector<int>>(k));
     #pragma omp parallel if(n_threads > 1) num_threads(n_threads)
     {
