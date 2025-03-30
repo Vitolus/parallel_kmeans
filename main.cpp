@@ -92,17 +92,22 @@ int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::
 
 void execute(const std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize,
 std::vector<double>& times, std::vector<double>& speedups){
-    for(int i = 1; i <= MAX_N_THREADS; i++){
-        std::cout << "\n# threads = " << i << std::endl;
-        auto* km = new k_means(images, labels, i, k, batchSize, MAX_ITER);
-        const auto time = omp_get_wtime();
-        auto [fst, snd] = km->fit(images, TOL, true);
-        times[i-1] = omp_get_wtime() - time;
-        delete km;
-        km = nullptr;
-        speedups[i-1] = times[0] / times[i-1];
-        std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl << std::endl;
+    for(int t = 0; t < 10; t++){
+        std::cout << "\n# execution = " << t << std::endl;
+        for(int i = 1; i <= MAX_N_THREADS; i++){
+            std::cout << "\n# threads = " << i << std::endl;
+            auto* km = new k_means(images, labels, i, k, batchSize, MAX_ITER);
+            auto time = omp_get_wtime();
+            auto [fst, snd] = km->fit(images, TOL, true);
+            time = omp_get_wtime() - time;
+            times[i-1] = (t * times[i-1] + time) / (t+1);
+            delete km;
+            km = nullptr;
+            speedups[i-1] = times[0] / times[i-1];
+            std::cout << "Time: " << time << " Speedup: " << speedups[i-1] << std::endl
+            << "Inertia value: " << fst << std::endl
+            << "NMI value: " << snd << std::endl << std::endl;
+        }
     }
 }
 
