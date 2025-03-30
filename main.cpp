@@ -83,7 +83,7 @@ int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::
         if(inertias[maxNmiIdx] < snd) maxNmiIdx = j;
         j++;
         std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl << std::endl;
+        << "nmi value: " << snd << std::endl;
     }
     std::cout << "Best inertia value: " << inertias[minInertiaIdx] << "at batchSize = " << (minInertiaIdx + 1) * 2500 << std::endl
     << "Best nmi value: " << nmis[maxNmiIdx] << "at batchSize = " << (maxNmiIdx + 1) * 2500 << std::endl;
@@ -106,7 +106,7 @@ std::vector<double>& times, std::vector<double>& speedups){
             speedups[i-1] = times[0] / times[i-1];
             std::cout << "Time: " << time << " Speedup: " << speedups[i-1] << std::endl
             << "Inertia value: " << fst << std::endl
-            << "NMI value: " << snd << std::endl << std::endl;
+            << "NMI value: " << snd << std::endl;
         }
     }
 }
@@ -119,7 +119,7 @@ void test(const std::vector<std::vector<float>>& images, const std::vector<int>&
         delete km;
         km = nullptr;
         std::cout << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl << std::endl;
+        << "nmi value: " << snd << std::endl;
     }
 }
 
