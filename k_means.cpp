@@ -21,7 +21,7 @@ const int maxIter) : n_threads(n_threads), k(k), batchSize(batchSize), maxIter(m
     }
 }
 
-std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol){
+std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& dataset, const double tol, const bool fitting){
     std::vector<int> counts(k); // count the number of data points assigned to each centroid
     double delta = tol + 1.0;
     double prevChange = 0.0;
@@ -39,12 +39,13 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
-        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+        #pragma omp parallel for if(n_threads > 1 && fitting) num_threads(n_threads) schedule(dynamic)
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             const int idx = indices[j];
+            int curCount;
             #pragma omp atomic capture
-            const int curCount = ++counts[idx];
+            curCount = ++counts[idx];
             const float lr = 1.0 / curCount; // learning rate decays with the number of data points assigned to the centroid
             omp_set_lock(&locks[idx]);
             for(size_t l = 0; l < 784; l++){ // update the centroid based on a data point
@@ -52,7 +53,6 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
             }
             omp_unset_lock(&locks[idx]);
         }
-        //scanAssign(batch); //TODO: check if useless
         delta = deltaChange(prevChange, prevCentroids);
         //std::cout << "delta change: " << deltaChange << std::endl;
     }

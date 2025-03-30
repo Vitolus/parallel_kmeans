@@ -30,7 +30,7 @@ class k_means{
 
 public:
     k_means(const std::vector<std::vector<float>>& dataset, const std::vector<int>& labels, int n_threads, int k, int batchSize, int maxIter);
-    std::pair<double, double> fit(const std::vector<std::vector<float>>& dataset, double tol);
+    std::pair<double, double> fit(const std::vector<std::vector<float>>& dataset, double tol, bool fitting);
 };
 
 #endif //K_MEANS_H
