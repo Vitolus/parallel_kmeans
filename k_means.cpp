@@ -1,5 +1,4 @@
 #include "k_means.h"
-
 #include <cassert>
 #include <iostream>
 #include <random>
@@ -32,13 +31,15 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
     }
     size_t i = 0;
     for(i = 0; delta > tol && i < maxIter; i++){
-        std::vector<std::vector<float>> batch = sampleData(dataset); // sample a batch of data points
-        std::vector<int> indices(batchSize);
+        std::vector<std::vector<float>> batch = sampleData(dataset); // sample a batch of data points [batchSize][784]
+        std::vector<int> indices(batchSize); // idx: data point idx, value: closest centroid idx
+        // find centroids
         #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
+        // update centroids
         #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
@@ -118,6 +119,9 @@ int k_means::findCentroidIdx(const std::vector<float>& x) const{
 }
 
 void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
+    for(auto& cluster : clusters){
+        cluster.clear();
+    }
     std::vector<std::vector<std::vector<int>>> localClusters(n_threads, std::vector<std::vector<int>>(k));
     #pragma omp parallel if(n_threads > 1) num_threads(n_threads)
     {

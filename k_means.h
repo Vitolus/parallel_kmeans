@@ -10,7 +10,7 @@ class k_means{
     int batchSize; // number of samples to use in each iteration
     int maxIter; // maximum number of iterations
     std::vector<std::vector<int>> labelClusters;
-    std::vector<std::vector<int>> clusters; // fitted cluster assignments (key: cluster idx, value: data point idx)
+    std::vector<std::vector<int>> clusters; // fitted cluster assignments (idx: cluster idx, value: array of data point idx)
     std::vector<std::vector<float>> centroids; // cluster centers
 
     // Euclidean distance between a data point and a cluster center

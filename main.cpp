@@ -1,7 +1,5 @@
 #include <fstream>
 #include <iostream>
-#include <limits.h>
-#include <math.h>
 #include <vector>
 #include "k_means.h"
 
@@ -43,7 +41,7 @@ std::vector<int> &labels ) {
 
 constexpr int MAX_N_THREADS = 12;
 constexpr int MAX_ITER = 1000;
-constexpr float TOL = 1e-5;
+constexpr float TOL = 1e-4;
 
 int findBestK(const std::vector<std::vector<float>>& images, const std::vector<int>& labels){
     int maxNmiIdx = 0;
