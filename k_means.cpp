@@ -1,4 +1,5 @@
 #include "k_means.h"
+#include <algorithm>
 #include <iostream>
 #include <random>
 
