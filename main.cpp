@@ -104,7 +104,7 @@ std::vector<double>& times, std::vector<double>& speedups){
     for(int t = 0; t < 10; t++){
         std::cout << "\n# execution = " << t << std::endl;
         for(int i = 1; i <= MAX_N_THREADS; i++){
-            std::cout << "# threads = " << i << std::endl;
+            std::cout << "\n# threads = " << i << std::endl;
             auto* km = new k_means(images, labels, i, k, batchSize, MAX_ITER);
             std::cout << "fitting..." << std::endl;
             auto time = omp_get_wtime();
