@@ -3,8 +3,6 @@
 #include <vector>
 #include "k_means.h"
 
-// g++-14 -std=c++11 -O3 -fopenmp kmeans.cpp -o kmeans
-
 void load_MNIST(const char* images_file, const char* labels_file, std::vector< std::vector<float> > &images,
 std::vector<int> &labels ) {
     int rows = 70000, cols=784;
@@ -39,8 +37,21 @@ std::vector<int> &labels ) {
     file2.close();
 }
 
-constexpr int MAX_N_THREADS = 12;
-constexpr int MAX_ITER = 1000;
+void writeCSV(const std::string &filename, const std::vector<double> &times, const std::vector<double> &speedups){
+    std::ofstream file(filename);
+    if(!file.is_open()){
+        std::cout << "file not found" << std::endl;
+        return;
+    }
+    file << "n threads,time,speedup" << std::endl;
+    for(auto i = 1; i <= times.size(); ++i){
+        file << i << "," << times[i-1] << "," << speedups[i-1] << std::endl;
+    }
+    file.close();
+}
+
+int MAX_N_THREADS = 1;
+constexpr int MAX_ITER = 500;
 constexpr float TOL = 1e-4;
 
 int findBestK(const std::vector<std::vector<float>>& images, const std::vector<int>& labels){
@@ -93,8 +104,9 @@ std::vector<double>& times, std::vector<double>& speedups){
     for(int t = 0; t < 10; t++){
         std::cout << "\n# execution = " << t << std::endl;
         for(int i = 1; i <= MAX_N_THREADS; i++){
-            std::cout << "\n# threads = " << i << std::endl;
+            std::cout << "# threads = " << i << std::endl;
             auto* km = new k_means(images, labels, i, k, batchSize, MAX_ITER);
+            std::cout << "fitting..." << std::endl;
             auto time = omp_get_wtime();
             auto [fst, snd] = km->fit(images, TOL);
             time = omp_get_wtime() - time;
@@ -113,15 +125,22 @@ void test(const std::vector<std::vector<float>>& images, const std::vector<int>&
     for(auto i = 0; i < 5; i++){
         std::cout << "\nExecution " << i << std::endl;
         auto* km = new k_means(images, labels, MAX_N_THREADS, k, batchSize, MAX_ITER);
+        auto time = omp_get_wtime();
         auto [fst, snd] = km->fit(images, TOL);
+        time = omp_get_wtime() - time;
         delete km;
         km = nullptr;
-        std::cout << "inertia value: " << fst << std::endl
+        std::cout << "Time: " << time << std::endl
+        << "inertia value: " << fst << std::endl
         << "nmi value: " << snd << std::endl;
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    if(argc != 2){
+        std::cerr << "Usage: " << argv[0] << " <n_threads>" << std::endl;
+        return 1;
+    }
     std::vector<std::vector<float>> images;
     std::vector<int> labels;
     load_MNIST("../data/mnist-images.txt", "../data/mnist-labels.txt", images, labels);
@@ -137,18 +156,20 @@ int main() {
 
     int k = 10;
     int batchSize = 70000;
+    MAX_N_THREADS = std::stoi(argv[1]);
     std::vector<double> times(MAX_N_THREADS);
     std::vector<double> speedups(MAX_N_THREADS);
     // k = 8 is the best
     std::cout << "\nFinding best k..." << std::endl;
-    k = findBestK(images, labels);
-    // best batchSize = ???
+//    k = findBestK(images, labels);
+    // batchSize = ??? is the best
     std::cout << "\nFinding best batchSize..." << std::endl;
-    batchSize = findBestBatchSize(images, labels, k);
+//    batchSize = findBestBatchSize(images, labels, k);
     std::cout << "\nTesting..." << std::endl;
-    test(images, labels, k, batchSize);
+    //test(images, labels, k, batchSize);
     std::cout << "\nFitting k_means..." << std::endl;
     execute(images, labels, k, batchSize, times, speedups);
+    writeCSV("kmeans-speedup.csv", times, speedups);
     for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "# threads: " << i << std::endl
         << "Time: " << times[i-1] << " Speedup: " << speedups[i-1] << std::endl;
