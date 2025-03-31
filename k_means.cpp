@@ -1,5 +1,4 @@
 #include "k_means.h"
-#include <cassert>
 #include <iostream>
 #include <random>
 
@@ -34,13 +33,13 @@ std::pair<double, double> k_means::fit(const std::vector<std::vector<float>>& da
         std::vector<std::vector<float>> batch = sampleData(dataset); // sample a batch of data points [batchSize][784]
         std::vector<int> indices(batchSize); // idx: data point idx, value: closest centroid idx
         // find centroids
-        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic) // major improvement
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             indices[j] = findCentroidIdx(x); // find the closest centroid idx for a data point
         }
         // update centroids
-        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic)
+        #pragma omp parallel for if(n_threads > 1) num_threads(n_threads) schedule(dynamic) // mid improvement
         for(size_t j = 0; j < batchSize; j++){
             const auto& x = batch[j];
             const int idx = indices[j];
@@ -122,8 +121,8 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     for(auto& cluster : clusters){
         cluster.clear();
     }
-    std::vector<std::vector<std::vector<int>>> localClusters(n_threads, std::vector<std::vector<int>>(k));
-    #pragma omp parallel if(n_threads > 1) num_threads(n_threads)
+    std::vector localClusters(n_threads, std::vector<std::vector<int>>(k));
+    #pragma omp parallel if(n_threads > 1) num_threads(n_threads) // minor improvement
     {
         const int tid = omp_get_thread_num();
         #pragma omp for schedule(dynamic)
@@ -139,6 +138,7 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     }
     for(auto& cluster : clusters){
         cluster.shrink_to_fit();
+        std::sort(cluster.begin(), cluster.end());
     }
 }
 
@@ -157,7 +157,6 @@ double k_means::nmiError(const int size){
     double hentropyLabels = 0.0;
     double mutualInformation = 0.0;
     for(auto& cluster : clusters) {
-        std::sort(cluster.begin(), cluster.end());
         const double ratio = static_cast<double>(cluster.size()) / size;
         if(ratio == 0) continue; //by definition, log2(0) = 0
         hentropyClusters += ratio * std::log2(ratio);
