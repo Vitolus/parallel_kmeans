@@ -37,12 +37,7 @@ std::vector<int> &labels ) {
     file2.close();
 }
 
-void writeCSV(const std::string &filename, const std::vector<double> &times, const std::vector<double> &speedups){
-    std::ofstream file(filename);
-    if(!file.is_open()){
-        std::cout << "file not found" << std::endl;
-        return;
-    }
+void writeCSV(std::ofstream& file, const std::vector<double> &times, const std::vector<double> &speedups){
     file << "n threads,time,speedup" << std::endl;
     for(auto i = 1; i <= times.size(); ++i){
         file << i << "," << times[i-1] << "," << speedups[i-1] << std::endl;
@@ -101,44 +96,27 @@ int findBestBatchSize(const std::vector<std::vector<float>>& images, const std::
 
 void execute(const std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize,
 std::vector<double>& times, std::vector<double>& speedups){
-    for(int t = 0; t < 10; t++){
-        std::cout << "\n# execution = " << t << std::endl;
-        for(int i = 1; i <= MAX_N_THREADS; i++){
-            std::cout << "\n# threads = " << i << std::endl;
-            auto* km = new k_means(images, labels, i, k, batchSize, MAX_ITER);
-            std::cout << "fitting..." << std::endl;
-            auto time = omp_get_wtime();
-            auto [fst, snd] = km->fit(images, TOL);
-            time = omp_get_wtime() - time;
-            times[i-1] = (t * times[i-1] + time) / (t+1);
-            delete km;
-            km = nullptr;
-            speedups[i-1] = times[0] / times[i-1];
-            std::cout << "Time: " << time << " Speedup: " << speedups[i-1] << std::endl
-            << "Inertia value: " << fst << std::endl
-            << "NMI value: " << snd << std::endl;
-        }
-    }
-}
-
-void test(const std::vector<std::vector<float>>& images, const std::vector<int>& labels, const int k, const int batchSize){
-    for(auto i = 0; i < 5; i++){
-        std::cout << "\nExecution " << i << std::endl;
-        auto* km = new k_means(images, labels, MAX_N_THREADS, k, batchSize, MAX_ITER);
+    for(int i = 1; i <= MAX_N_THREADS; i++){
+        std::cout << "\n# threads = " << i << std::endl;
+        auto* km = new k_means(images, labels, i, k, batchSize, MAX_ITER);
+        std::cout << "fitting..." << std::endl;
         auto time = omp_get_wtime();
         auto [fst, snd] = km->fit(images, TOL);
-        time = omp_get_wtime() - time;
+        times[i-1] = omp_get_wtime() - time;
         delete km;
         km = nullptr;
-        std::cout << "Time: " << time << std::endl
-        << "inertia value: " << fst << std::endl
-        << "nmi value: " << snd << std::endl;
+        speedups[i-1] = times[0] / times[i-1];
+        std::cout << "Time: " << time << " Speedup: " << speedups[i-1] << std::endl
+        << "Inertia value: " << fst << std::endl
+        << "NMI value: " << snd << std::endl;
     }
 }
 
 int main(int argc, char* argv[]) {
-    if(argc != 2){
-        std::cerr << "Usage: " << argv[0] << " <n_threads>" << std::endl;
+    std::string filename = "../results/speedup.csv";
+    std::ofstream file(filename);
+    if(!file){
+        std::cerr << "Error: Unable to open or create file: " << filename << std::endl;
         return 1;
     }
     std::vector<std::vector<float>> images;
@@ -161,15 +139,14 @@ int main(int argc, char* argv[]) {
     std::vector<double> speedups(MAX_N_THREADS);
     // k = 8 is the best
     std::cout << "\nFinding best k..." << std::endl;
-//    k = findBestK(images, labels);
-    // batchSize = ??? is the best
+    k = findBestK(images, labels);
+    // batchSize = 32500 is the best
     std::cout << "\nFinding best batchSize..." << std::endl;
-//    batchSize = findBestBatchSize(images, labels, k);
+    batchSize = findBestBatchSize(images, labels, k);
     std::cout << "\nTesting..." << std::endl;
-    //test(images, labels, k, batchSize);
     std::cout << "\nFitting k_means..." << std::endl;
     execute(images, labels, k, batchSize, times, speedups);
-    writeCSV("kmeans-speedup.csv", times, speedups);
+    writeCSV(file, times, speedups);
     for(int i = 1; i <= MAX_N_THREADS; i++){
         std::cout << "# threads: " << i << std::endl
         << "Time: " << times[i-1] << " Speedup: " << speedups[i-1] << std::endl;

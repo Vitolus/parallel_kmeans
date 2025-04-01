@@ -98,8 +98,8 @@ std::vector<std::vector<float>> k_means::sampleData(const std::vector<std::vecto
     std::vector<std::vector<float>> batch(batchSize);
     std::vector<int> indices(dataset.size());
     std::iota(indices.begin(), indices.end(), 0); // fill the vector with 0, 1, 2, ..., dataset.size()-1
-    std::mt19937 gen(666);
-    std::shuffle(indices.begin(), indices.end(), gen);
+    std::mt19937 gen(1000066600001);
+    std::ranges::shuffle(indices, gen);
     for(size_t i = 0; i < batchSize; i++){ // sample batchSize shuffled data points
         batch[i] = dataset[indices[i]];
     }
@@ -172,8 +172,7 @@ double k_means::nmiError(const int size){
     for(auto & cluster : clusters){
         for(auto & labelCluster : labelClusters){
             std::vector<int> intersection;
-            std::set_intersection(cluster.begin(), cluster.end(),
-            labelCluster.begin(), labelCluster.end(), std::back_inserter(intersection));
+            std::ranges::set_intersection(cluster, labelCluster, std::back_inserter(intersection));
             if(intersection.empty()) continue; //by definition, log2(0) = 0
             mutualInformation += (static_cast<double>(intersection.size()) / size) *
             std::log2((static_cast<double>(size * intersection.size())) /
