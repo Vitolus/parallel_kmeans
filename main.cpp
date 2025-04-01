@@ -102,7 +102,8 @@ std::vector<double>& times, std::vector<double>& speedups){
         std::cout << "fitting..." << std::endl;
         auto time = omp_get_wtime();
         auto [fst, snd] = km->fit(images, TOL);
-        times[i-1] = omp_get_wtime() - time;
+        time = omp_get_wtime() - time;
+        times[i-1] = time;
         delete km;
         km = nullptr;
         speedups[i-1] = times[0] / times[i-1];
@@ -137,10 +138,8 @@ int main(int argc, char* argv[]) {
     MAX_N_THREADS = std::stoi(argv[1]);
     std::vector<double> times(MAX_N_THREADS);
     std::vector<double> speedups(MAX_N_THREADS);
-    // k = 8 is the best
     std::cout << "\nFinding best k..." << std::endl;
     k = findBestK(images, labels);
-    // batchSize = 32500 is the best
     std::cout << "\nFinding best batchSize..." << std::endl;
     batchSize = findBestBatchSize(images, labels, k);
     std::cout << "\nTesting..." << std::endl;
