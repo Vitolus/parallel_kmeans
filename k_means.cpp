@@ -139,7 +139,7 @@ void k_means::scanAssign(const std::vector<std::vector<float>>& batch){
     }
     for(auto& cluster : clusters){
         cluster.shrink_to_fit();
-        std::sort(cluster.begin(), cluster.end());
+        std::ranges::sort(cluster);
     }
 }
 
@@ -164,7 +164,7 @@ double k_means::nmiError(const int size){
     }
     hentropyClusters *= -1;
     for(auto& labelCluster : labelClusters) {
-        std::sort(labelCluster.begin(), labelCluster.end());
+        std::ranges::sort(labelCluster);
         const double ratio = static_cast<double>(labelCluster.size()) / size;
         hentropyLabels += ratio * std::log2(ratio);
     }
