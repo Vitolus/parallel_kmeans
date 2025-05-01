@@ -1,2 +1,1 @@
-# LEARN_Assignment1
-Assignment 1 of Learning over massive data course
+Parallel implementation with OpenMP of the kmeans algorithm to cluster the MNIST dataset
